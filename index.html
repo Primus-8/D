@@ -1,0 +1,113 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mini Image Host</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f7f7f7;
+      text-align: center;
+      padding: 50px;
+    }
+    .container {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      padding: 30px;
+      max-width: 500px;
+      margin: auto;
+    }
+    #imagePreview {
+      margin-top: 20px;
+      max-width: 100%;
+      height: auto;
+      display: none;
+    }
+    .link-box {
+      margin-top: 10px;
+      word-wrap: break-word;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Upload Your Image</h2>
+    <input type="file" id="fileInput" accept="image/*" /><br />
+    <button onclick="uploadImage()">Upload</button>
+    <img id="imagePreview" />
+    <div class="link-box" id="linkBox"></div>
+    <button id="deleteBtn" onclick="deleteImage()" style="display:none;">Delete Image</button>
+  </div>
+
+  <script>
+    let uploadedFileKey = null;
+
+    async function uploadImage() {
+      const fileInput = document.getElementById('fileInput');
+      const file = fileInput.files[0];
+      if (!file) return alert("Please choose an image!");
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("https://uploadthing.com/api/uploadFiles", {
+        method: "POST",
+        headers: {
+          "x-uploadthing-api-key": "sk_live_08c9b377aaa1de00cdb2c23e65f8ea3ed32c7d57e05b306cf83e24a4dd2e1647",
+          "x-uploadthing-package": "uploadthing",
+        },
+        body: formData,
+      });
+
+      const json = await res.json();
+      if (json && json[0]) {
+        const imgUrl = json[0].url;
+        uploadedFileKey = json[0].key;
+        document.getElementById("imagePreview").src = imgUrl;
+        document.getElementById("imagePreview").style.display = "block";
+        document.getElementById("linkBox").innerHTML = "<strong>Direct Link:</strong> <br><a href='" + imgUrl + "' target='_blank'>" + imgUrl + "</a>";
+        document.getElementById("deleteBtn").style.display = "inline-block";
+      }
+    }
+
+    async function deleteImage() {
+      if (!uploadedFileKey) return;
+
+      const res = await fetch("https://uploadthing.com/api/deleteFile", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-uploadthing-api-key": "sk_live_08c9b377aaa1de00cdb2c23e65f8ea3ed32c7d57e05b306cf83e24a4dd2e1647"
+        },
+        body: JSON.stringify({ fileKey: uploadedFileKey })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        alert("Image deleted!");
+        document.getElementById("imagePreview").style.display = "none";
+        document.getElementById("linkBox").innerHTML = "";
+        document.getElementById("deleteBtn").style.display = "none";
+        uploadedFileKey = null;
+      } else {
+        alert("Failed to delete image.");
+      }
+    }
+  </script>
+</body>
+</html>
