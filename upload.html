@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Image Upload</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+    }
+    input, button {
+      padding: 10px;
+      margin-top: 10px;
+      font-size: 16px;
+    }
+    #result {
+      margin-top: 15px;
+      color: green;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h2>Upload Image</h2>
+  <input type="file" id="fileInput" />
+  <br>
+  <button onclick="uploadFile()">Upload</button>
+  <p id="result"></p>
+
+  <script>
+    async function uploadFile() {
+      const file = document.getElementById('fileInput').files[0];
+      if (!file) {
+        alert("Please select a file");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        const res = await fetch("https://real-backend-azga.vercel.app/api/upload", {
+          method: "POST",
+          body: formData
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          document.getElementById('result').innerHTML = `✅ Uploaded: <a href="${data.url}" target="_blank">${data.url}</a>`;
+        } else {
+          document.getElementById('result').innerText = "❌ Error: " + data.error;
+        }
+      } catch (err) {
+        document.getElementById('result').innerText = "❌ Failed to upload.";
+        console.error(err);
+      }
+    }
+  </script>
+</body>
+</html>
